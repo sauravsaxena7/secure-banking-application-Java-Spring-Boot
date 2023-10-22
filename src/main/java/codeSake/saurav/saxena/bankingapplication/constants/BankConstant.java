@@ -19,6 +19,13 @@ public class BankConstant {
     public static final String ACCOUNT_CREDITED_SUCCESS_MESSAGE="Dear Customer, Acct Credited.";
     public static final String ACCOUNT_DEBITED_SUCCESS_MESSAGE="Account debited with Amount: ";
     public static final String ACCOUNT_DEBITED_FAILED_MESSAGE="insufficient Balance.";
+    public static final String TRANSFER_SOURCE_ACCOUNT_NOT_EXIST_MESSAGE="Source Account Not Exist.";
+    public static final String TRANSFER_DESTINATION_ACCOUNT_NOT_EXIST_MESSAGE="Destination Account Not Exist.";
+    public static final String TRANSFER_SOURCE_ACCOUNT_NOT_EXIST_CODE="007";
+    public static final String TRANSFER_DESTINATION_ACCOUNT_NOT_EXIST_CODE="009";
+    public static final String TRANSFER_SUCCESS_CODE="010";
+    public static final String TRANSFER_SUCCESS_MESSAGE="TRANSFER SUCCESSFULLY OCCURRED!";
+
 
 
 }

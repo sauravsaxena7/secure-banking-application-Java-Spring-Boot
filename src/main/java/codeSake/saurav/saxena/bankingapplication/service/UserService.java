@@ -2,6 +2,7 @@ package codeSake.saurav.saxena.bankingapplication.service;
 
 import codeSake.saurav.saxena.bankingapplication.dto.CreditDebitRequest;
 import codeSake.saurav.saxena.bankingapplication.dto.EnquiryRequest;
+import codeSake.saurav.saxena.bankingapplication.dto.TransferRequest;
 import codeSake.saurav.saxena.bankingapplication.dto.UserRequest;
 import codeSake.saurav.saxena.bankingapplication.response.ApiResponse;
 import codeSake.saurav.saxena.bankingapplication.response.BankApiResponse;
@@ -13,4 +14,5 @@ public interface UserService {
 
     BankApiResponse debitAccount(CreditDebitRequest request);
     BankApiResponse creditAccount(CreditDebitRequest request);
+    BankApiResponse transferToOtherAccount(TransferRequest request);
 }

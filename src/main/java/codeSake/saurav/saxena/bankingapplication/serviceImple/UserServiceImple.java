@@ -5,6 +5,7 @@ import codeSake.saurav.saxena.bankingapplication.constants.BankConstant;
 import codeSake.saurav.saxena.bankingapplication.dao.UserDao;
 import codeSake.saurav.saxena.bankingapplication.dto.CreditDebitRequest;
 import codeSake.saurav.saxena.bankingapplication.dto.EnquiryRequest;
+import codeSake.saurav.saxena.bankingapplication.dto.TransferRequest;
 import codeSake.saurav.saxena.bankingapplication.dto.UserRequest;
 import codeSake.saurav.saxena.bankingapplication.response.AccountInfo;
 import codeSake.saurav.saxena.bankingapplication.response.ApiResponse;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 
 @Service
@@ -135,10 +137,10 @@ public class UserServiceImple implements UserService {
                     .build();
         }
         User userToDebit = userDao.findByAccountNumber(request.getAccountNumber());
-        int availableBalance=Integer.parseInt(userToDebit.getAccountBalance().toString());
-        int debitAmount=Integer.parseInt(request.getAmount().toString());
+        BigInteger availableBalance=userToDebit.getAccountBalance().toBigInteger();
+        BigInteger debitAmount=request.getAmount().toBigInteger();
 
-        if(availableBalance<debitAmount){
+        if(availableBalance.intValue()<debitAmount.intValue()){
             return BankApiResponse.builder()
                     .responseCode(BankConstant.ACCOUNT_DEBITED_FAILED_CODE)
                     .responseMessage(BankConstant.ACCOUNT_DEBITED_FAILED_MESSAGE)
@@ -187,6 +189,85 @@ public class UserServiceImple implements UserService {
                         .accountNumber(saveCreditedUser.getAccountNumber())
                         .build())
                 .build();
+
+    }
+
+    @Override
+    public BankApiResponse transferToOtherAccount(TransferRequest request) {
+
+        //get the account to debit
+        //check debiting account have sufficient balance
+        //debit the account
+        //get the account to credit
+        //credit the account
+
+        boolean isSourceAccountExist = userDao.existsByAccountNumber(request.getSourceAccountNumber());
+        boolean isDestinationAccountExist = userDao.existsByAccountNumber(request.getDestinationAccountNumber());
+
+        if(!isSourceAccountExist){
+            return  BankApiResponse.builder()
+                    .responseMessage(BankConstant.TRANSFER_SOURCE_ACCOUNT_NOT_EXIST_MESSAGE)
+                    .responseCode(BankConstant.TRANSFER_SOURCE_ACCOUNT_NOT_EXIST_CODE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        if(!isDestinationAccountExist){
+            return  BankApiResponse.builder()
+                    .responseMessage(BankConstant.TRANSFER_DESTINATION_ACCOUNT_NOT_EXIST_MESSAGE)
+                    .responseCode(BankConstant.TRANSFER_DESTINATION_ACCOUNT_NOT_EXIST_CODE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+
+        User sourceUser = userDao.findByAccountNumber(request.getSourceAccountNumber());
+        if(request.getAmount().compareTo(sourceUser.getAccountBalance())<0){
+
+            return BankApiResponse.builder()
+                    .responseMessage(BankConstant.ACCOUNT_DEBITED_FAILED_MESSAGE)
+                    .accountInfo(null)
+                    .responseCode(BankConstant.ACCOUNT_DEBITED_FAILED_CODE)
+                    .build();
+        }
+
+        sourceUser.setAccountBalance(sourceUser.getAccountBalance().subtract(request.getAmount()));
+        userDao.save(sourceUser);
+
+        //Send Email Alert
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(sourceUser.getEmail())
+                .messageBody("Your Account is Debited With Amount "+request.getAmount()+"\n"+
+                        "Aval Balance: "+sourceUser.getAccountBalance()+"\n"+
+                        "AccountNumber "+sourceUser.getAccountNumber())
+                .subject("ACCOUNT DEBIT")
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
+        User destinationUser = userDao.findByAccountNumber(request.getDestinationAccountNumber());
+        destinationUser.setAccountBalance(destinationUser.getAccountBalance().add(request.getAmount()));
+        userDao.save(destinationUser);
+
+
+        emailDetails = EmailDetails.builder()
+                .recipient(destinationUser.getEmail())
+                .messageBody("Your Account is Credited With Amount "+request.getAmount()+"\n"+
+                        "Current Balance: "+destinationUser.getAccountBalance()+"\n"+
+                        "AccountNumber "+destinationUser.getAccountNumber())
+                .subject("ACCOUNT DEBIT")
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
+        return  BankApiResponse.builder()
+                .responseCode(BankConstant.TRANSFER_SUCCESS_CODE)
+                .responseMessage(BankConstant.TRANSFER_SUCCESS_MESSAGE)
+                .accountInfo(null)
+                .build();
+
+
+
+
+
 
     }
 }
